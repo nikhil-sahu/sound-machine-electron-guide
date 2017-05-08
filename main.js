@@ -1,10 +1,11 @@
 'use strict';
+const electron = require('electron');
 
-var app = require('app');
-var BrowserWindow = require('browser-window');
-var globalShortcut = require('global-shortcut');
+var app = electron.app;
+var BrowserWindow = electron.BrowserWindow;
+var globalShortcut = electron.globalShortcut;
 var configuration = require('./configuration');
-var ipc = require('ipc');
+var ipc = electron.ipcMain;
 
 var mainWindow = null;
 var settingsWindow = null;
@@ -21,9 +22,11 @@ app.on('ready', function() {
         width: 368
     });
 
-    mainWindow.loadUrl('file://' + __dirname + '/app/index.html');
+    mainWindow.loadURL('file://' + __dirname + '/app/index.html');
 
     setGlobalShortcuts();
+
+    addMenu();
 });
 
 function setGlobalShortcuts() {
@@ -56,7 +59,7 @@ ipc.on('open-settings-window', function () {
         width: 200
     });
 
-    settingsWindow.loadUrl('file://' + __dirname + '/app/settings.html');
+    settingsWindow.loadURL('file://' + __dirname + '/app/settings.html');
 
     settingsWindow.on('closed', function () {
         settingsWindow = null;
@@ -72,3 +75,41 @@ ipc.on('close-settings-window', function () {
 ipc.on('set-global-shortcuts', function () {
     setGlobalShortcuts();
 });
+
+var trayIcon = null;
+var trayMenu = null;
+var Tray = electron.Tray;
+var Menu = electron.Menu;
+var path = require('path');
+
+function addMenu() {
+
+    if (process.platform === 'darwin') {
+        trayIcon = new Tray(path.join(__dirname, 'app/img/tray-iconTemplate.png'));
+    }
+    else {
+        trayIcon = new Tray(path.join(__dirname, 'app/img/tray-icon-alt.png'));
+    }
+
+    var trayMenuTemplate = [
+        {
+            label: 'Sound machine',
+            enabled: false
+        },
+        {
+            label: 'Settings',
+            click: function () {
+                ipc.send('open-settings-window');
+            }
+        },
+        {
+            label: 'Quit',
+            click: function () {
+                ipc.send('close-main-window');
+            }
+        }
+    ];
+    trayMenu = Menu.buildFromTemplate(trayMenuTemplate);
+    trayIcon.setContextMenu(trayMenu);
+
+}

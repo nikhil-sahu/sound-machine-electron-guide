@@ -4,11 +4,11 @@
   "main": "./main.js",
   "scripts": {
     "start": "electron .",
-    "package": "electron-packager ./ SoundMachine --all --out ~/Desktop/SoundMachine --version 0.30.2 --overwrite --icon=./app/img/app-icon.icns"
+    "package": "electron-packager ./ SoundMachine --all --out ~/Desktop/SoundMachine --electron-version 1.6.6 --overwrite --icon=./app/img/app-icon.icns"
   },
   "devDependencies": {
     "electron-packager": "^5.0.1",
-    "electron-prebuilt": "^0.30.3"
+    "electron": "1.6.6"
   },
   "dependencies": {
     "nconf": "^0.7.2"
