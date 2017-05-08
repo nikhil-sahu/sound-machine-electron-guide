@@ -7,10 +7,12 @@ var globalShortcut = electron.globalShortcut;
 var configuration = require('./configuration');
 var ipc = electron.ipcMain;
 
-var mainWindow = null;
-var settingsWindow = null;
+var usb = require('usb');
 
-app.on('ready', function() {
+var mainWindow = null;
+
+
+app.on('ready', function () {
     if (!configuration.readSettings('shortcutKeys')) {
         configuration.saveSettings('shortcutKeys', ['ctrl', 'shift']);
     }
@@ -27,6 +29,8 @@ app.on('ready', function() {
     setGlobalShortcuts();
 
     addMenu();
+
+    testUsb();
 });
 
 function setGlobalShortcuts() {
@@ -43,11 +47,15 @@ function setGlobalShortcuts() {
     });
 }
 
-ipc.on('close-main-window', function () {
+function closeMainWindow() {
     app.quit();
-});
+}
 
-ipc.on('open-settings-window', function () {
+ipc.on('close-main-window', closeMainWindow);
+
+let settingsWindow = null;
+function openSettingsWindow() {
+
     if (settingsWindow) {
         return;
     }
@@ -64,17 +72,18 @@ ipc.on('open-settings-window', function () {
     settingsWindow.on('closed', function () {
         settingsWindow = null;
     });
-});
+}
 
-ipc.on('close-settings-window', function () {
+function closeSettingsWindow() {
     if (settingsWindow) {
         settingsWindow.close();
     }
-});
+}
 
-ipc.on('set-global-shortcuts', function () {
-    setGlobalShortcuts();
-});
+ipc.on('open-settings-window', openSettingsWindow);
+ipc.on('close-settings-window', closeSettingsWindow);
+
+ipc.on('set-global-shortcuts', setGlobalShortcuts);
 
 var trayIcon = null;
 var trayMenu = null;
@@ -98,18 +107,19 @@ function addMenu() {
         },
         {
             label: 'Settings',
-            click: function () {
-                ipc.send('open-settings-window');
-            }
+            click: openSettingsWindow
         },
         {
             label: 'Quit',
-            click: function () {
-                ipc.send('close-main-window');
-            }
+            click: closeMainWindow
         }
     ];
     trayMenu = Menu.buildFromTemplate(trayMenuTemplate);
     trayIcon.setContextMenu(trayMenu);
+}
+
+function testUsb() {
+
+    console.log(usb.getDeviceList());
 
 }
